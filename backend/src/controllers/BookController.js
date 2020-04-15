@@ -4,14 +4,22 @@ const Book = require("../models/Book");
 module.exports = {
   async list(req, res, next) {
     await Book.find({})
-      .then(book => {
+      .then((book) => {
+        res.send(book);
+      })
+      .catch(next);
+  },
+  async listOne(req, res, next) {
+    const id = req.params.id;
+    await Book.findById({ _id: id })
+      .then((book) => {
         res.send(book);
       })
       .catch(next);
   },
   async create(req, res, next) {
     await Book.create(req.body)
-      .then(book => {
+      .then((book) => {
         res.send(book);
       })
       .catch(next);
@@ -19,7 +27,7 @@ module.exports = {
   async delete(req, res) {
     const id = req.params.id;
     try {
-      await Book.findByIdAndDelete({ _id: id }).then(book => {
+      await Book.findByIdAndDelete({ _id: id }).then((book) => {
         res.send(book);
       });
     } catch (err) {
@@ -29,11 +37,11 @@ module.exports = {
   async update(req, res) {
     const id = req.params.id;
     try {
-      await Book.findByIdAndUpdate({ _id: id }, req.body).then(book => {
+      await Book.findByIdAndUpdate({ _id: id }, req.body).then((book) => {
         res.send(book);
       });
     } catch (err) {
       console.log("Erro ao atualizar as informações");
     }
-  }
+  },
 };

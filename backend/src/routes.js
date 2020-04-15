@@ -4,6 +4,7 @@ const router = express.Router();
 const BookConnection = require("./controllers/BookController");
 
 router.get("/books", BookConnection.list);
+router.get("/books/:id", BookConnection.listOne);
 router.post("/books", BookConnection.create);
 router.delete("/books/:id", BookConnection.delete);
 router.put("/books/:id", BookConnection.update);
