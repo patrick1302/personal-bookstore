@@ -20,7 +20,7 @@ module.exports = {
   async create(req, res, next) {
     await Book.create(req.body)
       .then((book) => {
-        res.send(book);
+        res.status(201).send(book);
       })
       .catch(next);
   },
@@ -43,5 +43,10 @@ module.exports = {
     } catch (err) {
       console.log("Erro ao atualizar as informações");
     }
+  },
+  async auth(req, res, next) {
+    const token = req.headers.authorization.split(" ")[1];
+    console.log(req.body);
+    next();
   },
 };

@@ -3,17 +3,17 @@ const Schema = mongoose.Schema;
 const validation = require("validator");
 const bcrypt = require("bcrypt");
 
-const registerSchema = new Schema({
+const userSchema = new Schema({
   name: {
     type: String,
     required: true,
     trim: true,
   },
   email: {
-    type: String,
+    type: Schema.Types.String,
+    unique: true,
     required: true,
     lowercase: true,
-    unique: true,
     validate: {
       validator: function (value) {
         if (!validation.isEmail(value)) {
@@ -35,11 +35,10 @@ const registerSchema = new Schema({
   },
 });
 
-// registerSchema.pre("create", function (next) {
-//   bcrypt.hash(this.password, 8).then(function (result) {});
-//   next();
-// });
+userSchema.pre("save", async function (next) {
+  this.password = await bcrypt.hash(this.password, 8);
+  next();
+});
+const User = mongoose.model("User", userSchema);
 
-const Register = mongoose.model("Register", registerSchema);
-
-module.exports = Register;
+module.exports = User;
