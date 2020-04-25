@@ -1,44 +1,64 @@
 require("../db/moongose");
 
-const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const bcrypt = require("bcrypt");
 
 module.exports = {
-  async create(req, res, next) {
-    await User.create(req.body)
-      .then((data) => {
-        const token = jwt.sign({ payload: data.id }, "myscret", {
-          expiresIn: 86400,
-        });
-        res.send({ user: data, token });
-      })
-      .catch(next);
-  },
-  async login(req, res) {
-    const { email, password } = req.body;
+  async create(req, res) {
+    const user = new User(req.body);
 
     try {
-      const user = await User.findOne({ email });
-
-      if (!user) return res.status(404).send({ error: "User not found" });
-
-      const compare = await bcrypt.compare(password, user.password);
-      if (!compare) return res.status(401).send({ error: "Senha inválida" });
-
-      const token = jwt.sign({ payload: user._id }, "mysecret", {
-        expiresIn: 86400,
-      });
-      res.send({ user, token });
-    } catch (err) {
-      res.send(error);
+      await user.save();
+      const token = await user.generateAuthToken();
+      res.status(201).send({ user, token });
+    } catch (e) {
+      res.status(400).send(e);
     }
   },
-  async list(req, res, next) {
-    await User.find({})
-      .then((data) => {
-        res.send(data);
-      })
-      .catch(next);
+
+  async list(req, res) {
+    res.send(req.user);
+  },
+
+  async logout(req, res) {
+    try {
+      req.user.tokens = req.user.tokens.filter((token) => {
+        return token.token !== req.token;
+      });
+      await req.user.save();
+
+      res.send();
+    } catch (e) {
+      res.status(500).send();
+    }
+  },
+  async logoutAll(req, res) {
+    try {
+      req.user.tokens = [];
+      await req.user.save();
+      res.send();
+    } catch (e) {
+      res.status(500).send();
+    }
+  },
+
+  async login(req, res) {
+    try {
+      const user = await User.findByCredentials(
+        req.body.email,
+        req.body.password
+      );
+      const token = await user.generateAuthToken();
+      res.send({ user, token });
+    } catch (e) {
+      res.status(400).send(e);
+    }
+  },
+  async delete(req, res) {
+    try {
+      req.user.remove();
+      res.status(200).send(req.user);
+    } catch (er) {
+      res.status(500).send();
+    }
   },
 };

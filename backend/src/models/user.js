@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const validation = require("validator");
-const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const Book = require("./Book");
 
 const userSchema = new Schema({
   name: {
@@ -10,7 +11,7 @@ const userSchema = new Schema({
     trim: true,
   },
   email: {
-    type: Schema.Types.String,
+    type: String,
     unique: true,
     required: true,
     lowercase: true,
@@ -24,6 +25,8 @@ const userSchema = new Schema({
   },
   password: {
     type: String,
+    lowercase: true,
+    trim: true,
     required: true,
     validate: {
       validator: function (value) {
@@ -33,12 +36,55 @@ const userSchema = new Schema({
       },
     },
   },
+  tokens: [
+    {
+      token: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
 });
 
-userSchema.pre("save", async function (next) {
-  this.password = await bcrypt.hash(this.password, 8);
+userSchema.virtual("books", {
+  ref: "Book",
+  localField: "_id",
+  foreignField: "owner",
+});
+
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+
+  delete user.password;
+  delete user.tokens;
+
+  return user;
+};
+
+userSchema.methods.generateAuthToken = async function () {
+  const token = jwt.sign({ _id: this._id.toString() }, "mysecret");
+
+  this.tokens = this.tokens.concat({ token });
+  await this.save();
+
+  return token;
+};
+
+userSchema.statics.findByCredentials = async (email, password) => {
+  const user = await User.findOne({ email, password });
+
+  if (!user) {
+    throw new Error();
+  }
+
+  return user;
+};
+
+userSchema.pre("remove", async function (next) {
+  await Book.deleteMany({ owner: this._id });
   next();
 });
+
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;
