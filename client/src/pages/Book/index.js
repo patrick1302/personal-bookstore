@@ -1,20 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { MdDelete, MdDone, MdClose } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
+import Cookie from "js-cookie";
 
 import { store } from "react-notifications-component";
 
 import api from "../../services/api";
 
 import "./style.css";
-
-const inicialValue = {
-  title: "",
-  author: "",
-  image: "",
-  publisher: "",
-  acquired: false,
-};
 
 const notification = (message, type) => {
   store.addNotification({
@@ -29,6 +22,13 @@ const notification = (message, type) => {
     },
   });
 };
+const inicialValue = {
+  title: "",
+  author: "",
+  image: "",
+  publisher: "",
+  acquired: false,
+};
 
 function App() {
   const [books, setBooks] = useState([]);
@@ -37,7 +37,11 @@ function App() {
 
   useEffect(() => {
     async function fetchBooks() {
-      const { data } = await api.get("/books");
+      const authToken = Cookie.get("auth");
+      console.log(authToken);
+      const { data } = await api.get("/books", {
+        headers: { Authorization: authToken },
+      });
       setBooks(data);
     }
     fetchBooks();
@@ -45,7 +49,10 @@ function App() {
 
   const deleteBook = async (id) => {
     try {
-      await api.delete(`/books/${id}`);
+      const authToken = Cookie.get("auth");
+      await api.delete(`/books/${id}`, {
+        headers: { Authorization: authToken },
+      });
       const book = books.filter((book) => book._id !== id);
       setBooks(book);
       notification("Livro deletado com sucesso", "success");
@@ -56,7 +63,12 @@ function App() {
   };
   const addBook = async () => {
     try {
-      await api.post("/books", { ...values });
+      const authToken = Cookie.get("auth");
+      await api.post(
+        "/books",
+        { ...values },
+        { headers: { Authorization: authToken } }
+      );
       notification("O livro foi adicionado com sucesso.", "success");
     } catch (err) {
       console.log(err);
@@ -79,13 +91,23 @@ function App() {
   );
 
   const showEditModal = async (id) => {
-    const { data } = await api.get(`/books/${id}`);
-    setValues(data);
+    const authToken = Cookie.get("auth");
+    try {
+      const { data } = await api.get(`/book/${id}`, {
+        headers: { Authorization: authToken },
+      });
+      setValues(data);
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   const edit = async (id) => {
+    const authToken = Cookie.get("auth");
     try {
-      await api.put(`/books/${id}`, values);
+      await api.put(`/book/${id}`, values, {
+        headers: { Authorization: authToken },
+      });
       notification("As informações foram editadas com sucesso", "success");
     } catch (err) {
       console.log(err);
