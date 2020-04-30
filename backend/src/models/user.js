@@ -4,47 +4,52 @@ const validation = require("validator");
 const jwt = require("jsonwebtoken");
 const Book = require("./Book");
 
-const userSchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  email: {
-    type: String,
-    unique: true,
-    required: true,
-    lowercase: true,
-    validate: {
-      validator: function (value) {
-        if (!validation.isEmail(value)) {
-          throw new Error("Must be a valid email ");
-        }
+const userSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+      lowercase: true,
+      validate: {
+        validator: function (value) {
+          if (!validation.isEmail(value)) {
+            throw new Error("Must be a valid email ");
+          }
+        },
       },
     },
-  },
-  password: {
-    type: String,
-    lowercase: true,
-    trim: true,
-    required: true,
-    validate: {
-      validator: function (value) {
-        if (value.length < 5) {
-          throw new Error("Password must contain at least 5 characters");
-        }
+    password: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      required: true,
+      validate: {
+        validator: function (value) {
+          if (value.length < 5) {
+            throw new Error("Password must contain at least 5 characters");
+          }
+        },
       },
     },
-  },
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
       },
-    },
-  ],
-});
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
 
 userSchema.virtual("books", {
   ref: "Book",

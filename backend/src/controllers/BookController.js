@@ -3,8 +3,30 @@ const Book = require("../models/Book");
 
 module.exports = {
   async list(req, res) {
+    const match = {};
+    const sort = {};
+
+    if (req.query.acquired) {
+      match.acquired = req.query.acquired === "true";
+    }
+
+    if (req.query.sortBy) {
+      const parts = req.query.sortBy.split(":");
+      sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
+    }
+
     try {
-      await req.user.populate("books").execPopulate();
+      await req.user
+        .populate({
+          path: "books",
+          match,
+          options: {
+            limit: parseInt(req.query.limit),
+            skip: parseInt(req.query.skip),
+            sort,
+          },
+        })
+        .execPopulate();
       res.send(req.user.books);
     } catch (e) {
       res.status(500).send();

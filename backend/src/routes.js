@@ -6,7 +6,12 @@ const UserConnection = require("./controllers/UserController");
 const middleware = require("./middleware/auth");
 
 //book
+
+// GET /books?acquired=true
+// GET /books?limit=10&skip=20
+// GET /books?sortBy=createdAt:desc
 router.get("/books", middleware.auth, BookConnection.list);
+
 router.get("/book/:id", middleware.auth, BookConnection.listOne);
 router.post("/books", middleware.auth, BookConnection.create);
 router.delete("/books/:id", middleware.auth, BookConnection.delete);
