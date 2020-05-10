@@ -2,10 +2,13 @@ const express = require("express");
 require("./db/moongose.js");
 const routes = require("./routes");
 const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 
-const port = process.env.PORT || 3333;
+const port = process.env.PORT;
+
+console.log(typeof process.env.PORT);
 
 app.use(cors());
 app.use(express.json());

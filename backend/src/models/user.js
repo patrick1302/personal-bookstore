@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 const validation = require("validator");
 const jwt = require("jsonwebtoken");
 const Book = require("./Book");
+require("dotenv").config();
 
 const userSchema = new Schema(
   {
@@ -67,7 +68,7 @@ userSchema.methods.toJSON = function () {
 };
 
 userSchema.methods.generateAuthToken = async function () {
-  const token = jwt.sign({ _id: this._id.toString() }, "mysecret");
+  const token = jwt.sign({ _id: this._id.toString() }, process.env.SECRET);
 
   this.tokens = this.tokens.concat({ token });
   await this.save();
