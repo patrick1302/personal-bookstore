@@ -1,6 +1,7 @@
 require("../db/moongose");
 
 const User = require("../models/user");
+const sharp = require("sharp");
 
 module.exports = {
   async create(req, res) {
@@ -60,5 +61,36 @@ module.exports = {
     } catch (er) {
       res.status(500).send();
     }
+  },
+  async getAvatar(req, res) {
+    try {
+      const user = await User.findById(req.user._id);
+
+      if (!user || !user.avatar) {
+        throw new Error();
+      }
+
+      res.set("Content-Type", "image/png");
+      res.send(user.avatar);
+    } catch (e) {
+      res.status(404).send();
+    }
+  },
+  async upload(req, res) {
+    const buffer = await sharp(req.file.buffer)
+      .resize({ width: 250, height: 250 })
+      .png()
+      .toBuffer();
+    req.user.avatar = buffer;
+    await req.user.save();
+    res.send();
+  },
+  async handleErrorUpload(error, req, res, next) {
+    res.status(400).send({ error: error.message });
+  },
+  async deleteAvatar(req, res) {
+    req.user.avatar = undefined;
+    await req.user.save();
+    res.send();
   },
 };
